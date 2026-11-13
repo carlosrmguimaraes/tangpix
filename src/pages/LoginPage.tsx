@@ -1,88 +1,73 @@
 import React, { useState } from 'react';
-import { Sparkles, Lock, Mail, User, ShieldCheck, ArrowRight, Bot } from 'lucide-react';
+import { Lock, Mail, ArrowRight, ShieldCheck, Sparkles, CheckCircle2 } from 'lucide-react';
 
-export const LoginPage: React.FC<{ onLoginSuccess: (user: any) => void }> = ({ onLoginSuccess }) => {
+export const LoginPage: React.FC<{ onLoginSuccess?: () => void }> = ({ onLoginSuccess }) => {
   const [isRegister, setIsRegister] = useState(false);
-  const [email, setEmail] = useState('carlosr.m.guimaraes@gmail.com');
-  const [password, setPassword] = useState('password123');
-  const [username, setUsername] = useState('');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [displayName, setDisplayName] = useState('');
+  const [username, setUsername] = useState('');
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
+  const [error, setError] = useState<string | null>(null);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    setError('');
+    setError(null);
+
+    const endpoint = isRegister ? '/api/auth/register' : '/api/auth/login';
+    const payload = isRegister
+      ? { email, password, displayName, username }
+      : { email, password };
 
     try {
-      const endpoint = isRegister ? '/api/auth/register' : '/api/auth/login';
-      const body = isRegister
-        ? { email, password, username, displayName }
-        : { email, password };
-
       const res = await fetch(endpoint, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(body)
+        body: JSON.stringify(payload)
       });
-
       const data = await res.json();
       if (data.success) {
         localStorage.setItem('tangpix_token', data.data.token);
-        onLoginSuccess(data.data.user);
+        if (onLoginSuccess) onLoginSuccess();
+        window.location.href = '/dashboard';
       } else {
-        setError(data.error || 'Falha ao autenticar.');
+        setError(data.error || 'Credenciais inválidas.');
       }
     } catch (err: any) {
-      setError('Erro de conexão com o servidor.');
+      setError('Falha de conexão com o servidor.');
     } finally {
       setLoading(false);
     }
   };
 
+  const fillQuickCredentials = () => {
+    setEmail('carlosr.m.guimaraes@gmail.com');
+    setPassword('password123');
+  };
+
   return (
-    <div className="min-h-screen bg-slate-950 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-[#0b0e14] text-slate-100 flex flex-col justify-center items-center p-4 font-sans">
       <div className="w-full max-w-md space-y-6">
-        {/* Logo / Branding */}
+        {/* Header Livepix Style */}
         <div className="text-center space-y-2">
-          <div className="inline-flex p-3 rounded-2xl bg-gradient-to-tr from-pix-cyan to-brand-500 shadow-xl shadow-pix-cyan/20">
-            <Bot className="w-8 h-8 text-black" />
+          <div className="inline-flex items-center gap-1.5 px-3 py-1 text-xs font-semibold rounded-full bg-[#00d182]/10 text-[#00d182] border border-[#00d182]/20 mb-2">
+            <ShieldCheck className="w-3.5 h-3.5" /> Portal Oficial do Streamer
           </div>
           <h1 className="text-3xl font-black text-white tracking-tight">
-            Tang<span className="text-pix-cyan">Pix</span>
+            Tang<span className="text-[#00d182]">Pix</span>
           </h1>
           <p className="text-xs text-slate-400">
-            A plataforma de monetização Pix e alertas gamificados 3D para streamers.
+            {isRegister
+              ? 'Crie sua conta e comece a receber Pix com alertas interativos hoje mesmo:'
+              : 'Olá! Digite seu e-mail e senha para entrar:'}
           </p>
         </div>
 
-        {/* Card do Formulário */}
-        <div className="p-8 rounded-2xl glass-panel-glow border border-slate-800 shadow-2xl space-y-6">
-          {/* Alternador Login / Cadastro */}
-          <div className="grid grid-cols-2 p-1 bg-slate-900 rounded-xl border border-slate-800">
-            <button
-              type="button"
-              onClick={() => { setIsRegister(false); setError(''); }}
-              className={`py-2 text-xs font-bold rounded-lg transition ${
-                !isRegister ? 'bg-pix-cyan text-black shadow-md' : 'text-slate-400 hover:text-white'
-              }`}
-            >
-              Entrar
-            </button>
-            <button
-              type="button"
-              onClick={() => { setIsRegister(true); setError(''); }}
-              className={`py-2 text-xs font-bold rounded-lg transition ${
-                isRegister ? 'bg-pix-cyan text-black shadow-md' : 'text-slate-400 hover:text-white'
-              }`}
-            >
-              Criar Conta
-            </button>
-          </div>
-
+        {/* Card */}
+        <div className="bg-[#131722] rounded-2xl border border-[#202636] p-6 shadow-2xl space-y-5">
           {error && (
-            <div className="p-3 bg-red-950/80 border border-red-500/50 rounded-xl text-red-200 text-xs">
+            <div className="p-3 bg-rose-500/10 border border-rose-500/30 rounded-xl text-xs text-rose-400">
               {error}
             </div>
           )}
@@ -91,67 +76,63 @@ export const LoginPage: React.FC<{ onLoginSuccess: (user: any) => void }> = ({ o
             {isRegister && (
               <>
                 <div>
-                  <label className="block text-xs font-bold uppercase text-slate-400 mb-1">
-                    Nome do Canal / Usuário:
-                  </label>
-                  <div className="relative">
-                    <User className="w-4 h-4 text-slate-500 absolute left-3.5 top-1/2 -translate-y-1/2" />
-                    <input
-                      type="text"
-                      placeholder="ex: seunome"
-                      value={username}
-                      onChange={(e) => setUsername(e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, ''))}
-                      required
-                      className="w-full pl-10 pr-4 py-2.5 bg-slate-900 border border-slate-700 rounded-xl text-sm text-white focus:outline-none focus:border-pix-cyan font-mono"
-                    />
-                  </div>
-                </div>
-
-                <div>
-                  <label className="block text-xs font-bold uppercase text-slate-400 mb-1">
-                    Nome de Exibição:
+                  <label className="text-xs font-semibold text-slate-300 block mb-1">
+                    Nome de Exibição
                   </label>
                   <input
                     type="text"
-                    placeholder="ex: Carlos Gamer"
+                    required
+                    placeholder="Ex: Carlos Guimarães"
                     value={displayName}
                     onChange={(e) => setDisplayName(e.target.value)}
-                    className="w-full px-4 py-2.5 bg-slate-900 border border-slate-700 rounded-xl text-sm text-white focus:outline-none focus:border-pix-cyan"
+                    className="w-full px-3.5 py-2.5 bg-[#0b0e14] border border-[#202636] rounded-xl text-xs text-white focus:outline-none focus:border-[#00d182] transition"
+                  />
+                </div>
+
+                <div>
+                  <label className="text-xs font-semibold text-slate-300 block mb-1">
+                    Nome de Usuário (@username)
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="Ex: carlos"
+                    value={username}
+                    onChange={(e) => setUsername(e.target.value.toLowerCase())}
+                    className="w-full px-3.5 py-2.5 bg-[#0b0e14] border border-[#202636] rounded-xl text-xs text-white focus:outline-none focus:border-[#00d182] transition"
                   />
                 </div>
               </>
             )}
 
             <div>
-              <label className="block text-xs font-bold uppercase text-slate-400 mb-1">
-                E-mail do Streamer:
+              <label className="text-xs font-semibold text-slate-300 block mb-1">
+                E-mail
               </label>
               <div className="relative">
-                <Mail className="w-4 h-4 text-slate-500 absolute left-3.5 top-1/2 -translate-y-1/2" />
                 <input
                   type="email"
+                  required
                   placeholder="seu@email.com"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  required
-                  className="w-full pl-10 pr-4 py-2.5 bg-slate-900 border border-slate-700 rounded-xl text-sm text-white focus:outline-none focus:border-pix-cyan"
+                  className="w-full px-3.5 py-2.5 bg-[#0b0e14] border border-[#202636] rounded-xl text-xs text-white focus:outline-none focus:border-[#00d182] transition"
                 />
               </div>
             </div>
 
             <div>
-              <label className="block text-xs font-bold uppercase text-slate-400 mb-1">
-                Senha de Acesso:
+              <label className="text-xs font-semibold text-slate-300 block mb-1">
+                Senha
               </label>
               <div className="relative">
-                <Lock className="w-4 h-4 text-slate-500 absolute left-3.5 top-1/2 -translate-y-1/2" />
                 <input
                   type="password"
+                  required
                   placeholder="••••••••"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  required
-                  className="w-full pl-10 pr-4 py-2.5 bg-slate-900 border border-slate-700 rounded-xl text-sm text-white focus:outline-none focus:border-pix-cyan"
+                  className="w-full px-3.5 py-2.5 bg-[#0b0e14] border border-[#202636] rounded-xl text-xs text-white focus:outline-none focus:border-[#00d182] transition"
                 />
               </div>
             </div>
@@ -159,27 +140,44 @@ export const LoginPage: React.FC<{ onLoginSuccess: (user: any) => void }> = ({ o
             <button
               type="submit"
               disabled={loading}
-              className="w-full py-3 bg-gradient-to-r from-pix-cyan to-brand-500 text-black font-extrabold text-sm rounded-xl flex items-center justify-center gap-2 hover:opacity-95 transition active:scale-95 shadow-lg shadow-pix-cyan/20"
+              className="w-full py-3 rounded-xl livepix-btn-primary flex items-center justify-center gap-2 text-xs font-bold transition shadow-lg disabled:opacity-50"
             >
-              {loading ? 'Entrando...' : isRegister ? 'Criar Minha Conta & Começar' : 'Acessar Meu Painel'}
-              <ArrowRight className="w-4 h-4" />
+              {loading ? (
+                'Autenticando...'
+              ) : (
+                <>
+                  <span>{isRegister ? 'Criar Minha Conta' : 'Entrar no Painel'}</span>
+                  <ArrowRight className="w-3.5 h-3.5" />
+                </>
+              )}
             </button>
           </form>
 
-          {/* Quick-Login Helper */}
-          <div className="pt-2 border-t border-slate-800 text-center">
+          {/* Quick Credentials Helper */}
+          <div className="pt-2 border-t border-[#202636] flex flex-col gap-2">
             <button
               type="button"
-              onClick={() => {
-                setEmail('carlosr.m.guimaraes@gmail.com');
-                setPassword('password123');
-              }}
-              className="text-[11px] text-pix-cyan hover:underline inline-flex items-center gap-1"
+              onClick={fillQuickCredentials}
+              className="w-full py-2 px-3 rounded-xl bg-[#171c2b] hover:bg-[#202636] text-[11px] font-semibold text-[#00d182] border border-[#232b3d] flex items-center justify-center gap-1.5 transition"
             >
-              <Sparkles className="w-3 h-3" /> Preencher credenciais padrão (carlosr.m.guimaraes@gmail.com)
+              <Sparkles className="w-3.5 h-3.5" /> Preencher Credenciais Rápidas (Carlos)
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setIsRegister(!isRegister)}
+              className="text-xs text-slate-400 hover:text-white transition text-center mt-1"
+            >
+              {isRegister
+                ? 'Já possui uma conta? Faça login aqui.'
+                : 'Não tem conta? Cadastre-se gratuitamente.'}
             </button>
           </div>
         </div>
+
+        <p className="text-[11px] text-slate-500 text-center">
+          TangPix Engine • Plataforma integrada de monetização Pix e gamificação interativa.
+        </p>
       </div>
     </div>
   );

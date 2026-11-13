@@ -4,24 +4,65 @@
 
 @layer base {
   body {
-    @apply bg-slate-950 text-slate-100 font-sans;
+    background-color: #0b0e14;
+    color: #f1f5f9;
+    font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    -webkit-font-smoothing: antialiased;
   }
 }
 
-/* Glassmorphism Gamer */
-.glass-panel {
-  background: rgba(15, 23, 42, 0.75);
-  backdrop-filter: blur(16px);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+/* Custom Livepix Design System */
+.livepix-bg {
+  background-color: #0b0e14;
 }
 
-.glass-panel-glow {
-  background: rgba(15, 23, 42, 0.85);
-  backdrop-filter: blur(20px);
-  border: 1px solid rgba(50, 188, 173, 0.3);
-  box-shadow: 0 0 30px rgba(50, 188, 173, 0.15);
+.livepix-card {
+  background-color: #131722;
+  border: 1px solid #202636;
+  border-radius: 1rem;
 }
 
-.neon-border-pix {
-  box-shadow: 0 0 15px rgba(50, 188, 173, 0.4);
+.livepix-card-subtle {
+  background-color: #171c2b;
+  border: 1px solid #232b3d;
+  border-radius: 0.75rem;
+}
+
+.livepix-btn-primary {
+  background-color: #00d182;
+  color: #0b0e14;
+  font-weight: 700;
+  transition: all 0.2s ease;
+}
+
+.livepix-btn-primary:hover {
+  background-color: #00b872;
+  box-shadow: 0 4px 20px rgba(0, 209, 130, 0.35);
+}
+
+.livepix-border-active {
+  border-color: #00d182;
+}
+
+.livepix-text-green {
+  color: #00d182;
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: #0b0e14;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #202636;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #00d182;
 }
