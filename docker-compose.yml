@@ -1,0 +1,49 @@
+version: '3.8'
+
+services:
+  tangpix-app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: tangpix-app
+    restart: always
+    ports:
+      - "3000:3000"
+    environment:
+      - PORT=3000
+      - NODE_ENV=production
+      - DATABASE_URL=postgresql://postgres:tangpix_secure_pass_2026@tangpix-postgres:5432/tangpix
+      - REDIS_URL=redis://:tangpix_redis_pass_2026@tangpix-redis:6379
+      - PIX_PROVIDER=mock
+      - DEFAULT_TTS_PROVIDER=edge
+      - PLATFORM_FEE_PERCENTAGE=5.0
+    depends_on:
+      - tangpix-postgres
+      - tangpix-redis
+
+  tangpix-postgres:
+    image: postgres:17-alpine
+    container_name: tangpix-postgres
+    restart: always
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: tangpix_secure_pass_2026
+      POSTGRES_DB: tangpix
+    volumes:
+      - tangpix_pgdata:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+
+  tangpix-redis:
+    image: redis:7-alpine
+    container_name: tangpix-redis
+    restart: always
+    command: redis-server --requirepass tangpix_redis_pass_2026
+    volumes:
+      - tangpix_redisdata:/data
+    ports:
+      - "6379:6379"
+
+volumes:
+  tangpix_pgdata:
+  tangpix_redisdata:
