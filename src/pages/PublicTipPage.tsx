@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import { useParams, Link } from 'react-router-dom';
 import {
   Sparkles,
   MessageSquare,
@@ -78,8 +77,11 @@ const AI_SAMPLE_MESSAGES = [
   'Mais um sub pra conta! Continua amassando na stream!'
 ];
 
-export const PublicTipPage: React.FC = () => {
-  const { username } = useParams<{ username: string }>();
+interface PublicTipPageProps {
+  username?: string;
+}
+
+export const PublicTipPage: React.FC<PublicTipPageProps> = ({ username = 'carlos' }) => {
   const [streamer, setStreamer] = useState<StreamerProfile | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -196,22 +198,22 @@ export const PublicTipPage: React.FC = () => {
       {/* Top Navbar Livepix Style */}
       <header className="border-b border-[#1c2230] bg-[#0e121a]/90 backdrop-blur sticky top-0 z-30">
         <div className="max-w-4xl mx-auto px-4 h-14 flex items-center justify-between">
-          <Link to="/" className="flex items-center gap-2">
+          <a href="/" className="flex items-center gap-2">
             <span className="text-xl font-black tracking-tight text-white">
               Tang<span className="text-[#00d182]">Pix</span>
             </span>
             <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-[#00d182]/10 text-[#00d182] border border-[#00d182]/20 hidden sm:inline-block">
               Livepix + Tangia
             </span>
-          </Link>
+          </a>
 
           <div className="flex items-center gap-3 text-xs">
-            <Link
-              to="/login"
+            <a
+              href="/login"
               className="px-3 py-1.5 rounded-lg bg-[#171c2b] hover:bg-[#20273c] text-slate-300 hover:text-white border border-[#232b3d] transition"
             >
               Sou Streamer
-            </Link>
+            </a>
           </div>
         </div>
       </header>
