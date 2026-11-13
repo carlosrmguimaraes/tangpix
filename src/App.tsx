@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { PublicTipPage } from './pages/PublicTipPage';
 import { OverlayWidget } from './pages/OverlayWidget';
 import { DashboardPage } from './pages/DashboardPage';
+import { LoginPage } from './pages/LoginPage';
 
 export const App: React.FC = () => {
   const [currentPath, setCurrentPath] = useState(window.location.pathname);
@@ -12,6 +13,22 @@ export const App: React.FC = () => {
     return () => window.removeEventListener('popstate', handlePopState);
   }, []);
 
+  const navigateTo = (path: string) => {
+    window.history.pushState({}, '', path);
+    setCurrentPath(path);
+  };
+
+  // Rota de Login: /login
+  if (currentPath === '/login') {
+    return (
+      <LoginPage
+        onLoginSuccess={() => {
+          navigateTo('/dashboard');
+        }}
+      />
+    );
+  }
+
   // Rota do OBS Browser Source: /overlay/:token
   if (currentPath.startsWith('/overlay/')) {
     const token = currentPath.replace('/overlay/', '').trim();
@@ -20,7 +37,13 @@ export const App: React.FC = () => {
 
   // Rota do Dashboard do Streamer: /dashboard
   if (currentPath.startsWith('/dashboard')) {
-    return <DashboardPage />;
+    return (
+      <DashboardPage
+        onLogout={() => {
+          navigateTo('/login');
+        }}
+      />
+    );
   }
 
   // Rota Pública de Doação: /:username (ou padrão 'carlos')

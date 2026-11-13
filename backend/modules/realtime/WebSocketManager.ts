@@ -7,6 +7,7 @@ export interface AlertPayload {
   donorName: string;
   amountCents: number;
   message: string;
+  aiResponse?: string;
   actionType: 'tts' | 'meme_webm' | 'avatar_3d' | 'sound_effect';
   actionAssetUrl?: string;
   audioBase64?: string;
@@ -17,9 +18,8 @@ export interface AlertPayload {
 
 export class WebSocketManager {
   private wss: WebSocketServer;
-  // Mapeia streamerId para conjunto de WebSockets (OBS overlays e Dashboards)
   private streamerRooms = new Map<string, Set<WebSocket>>();
-  // Mapeia token secreto para streamerId
+  private streamerOverlayClients = new Map<string, Set<WebSocket>>(); // Conexões específicas de OBS
   private tokenToStreamer = new Map<string, string>();
 
   constructor(server: HttpServer) {
@@ -29,6 +29,12 @@ export class WebSocketManager {
 
   registerStreamerToken(token: string, streamerId: string) {
     this.tokenToStreamer.set(token, streamerId);
+  }
+
+  // Verifica se o OBS Studio do streamer está aberto e conectado agora
+  isStreamerOnline(streamerId: string): boolean {
+    const overlays = this.streamerOverlayClients.get(streamerId.toLowerCase());
+    return !!(overlays && overlays.size > 0);
   }
 
   private setupListeners() {
@@ -44,17 +50,28 @@ export class WebSocketManager {
           return;
         }
 
-        const streamerId = this.tokenToStreamer.get(token) || token; // Em dev, token pode ser o próprio id
+        const streamerId = (this.tokenToStreamer.get(token) || token).toLowerCase();
 
         if (!this.streamerRooms.has(streamerId)) {
           this.streamerRooms.set(streamerId, new Set());
         }
         this.streamerRooms.get(streamerId)!.add(ws);
 
+        // Se for overlay do OBS, registra na lista de overlays ativos
+        if (role === 'overlay') {
+          if (!this.streamerOverlayClients.has(streamerId)) {
+            this.streamerOverlayClients.set(streamerId, new Set());
+          }
+          this.streamerOverlayClients.get(streamerId)!.add(ws);
+          this.broadcastStatus(streamerId, true);
+          console.log(`[TangPix OBS] Streamer '${streamerId}' está ONLINE no OBS!`);
+        }
+
         ws.send(JSON.stringify({
           type: 'CONNECTED',
           streamerId,
           role,
+          isOnline: this.isStreamerOnline(streamerId),
           message: `Conectado com sucesso ao canal de alertas (${role})`
         }));
 
@@ -71,8 +88,18 @@ export class WebSocketManager {
           const room = this.streamerRooms.get(streamerId);
           if (room) {
             room.delete(ws);
-            if (room.size === 0) {
-              this.streamerRooms.delete(streamerId);
+            if (room.size === 0) this.streamerRooms.delete(streamerId);
+          }
+
+          if (role === 'overlay') {
+            const overlays = this.streamerOverlayClients.get(streamerId);
+            if (overlays) {
+              overlays.delete(ws);
+              if (overlays.size === 0) {
+                this.streamerOverlayClients.delete(streamerId);
+                this.broadcastStatus(streamerId, false);
+                console.log(`[TangPix OBS] Streamer '${streamerId}' ficou OFFLINE no OBS.`);
+              }
             }
           }
         });
@@ -83,8 +110,16 @@ export class WebSocketManager {
     });
   }
 
+  private broadcastStatus(streamerId: string, isOnline: boolean) {
+    this.broadcastToStreamer(streamerId, {
+      type: 'STREAMER_STATUS',
+      streamerId,
+      isOnline,
+      timestamp: new Date().toISOString()
+    });
+  }
+
   private handleClientMessage(streamerId: string, data: any) {
-    // Ações vindas do Dashboard do Streamer
     if (data.type === 'SKIP_ALERT') {
       this.broadcastToStreamer(streamerId, { type: 'SKIP_CURRENT' });
     } else if (data.type === 'TEST_ALERT') {
@@ -93,7 +128,7 @@ export class WebSocketManager {
   }
 
   broadcastAlert(streamerId: string, alert: AlertPayload) {
-    this.broadcastToStreamer(streamerId, {
+    this.broadcastToStreamer(streamerId.toLowerCase(), {
       type: 'ALERT_TRIGGER',
       data: alert
     });
@@ -105,6 +140,7 @@ export class WebSocketManager {
       donorName: 'TangPix Fan #1',
       amountCents: 1000,
       message: 'TangPix tá surreal! O Pix caiu em 1 segundo e o alerta 3D tocou direto na live!',
+      aiResponse: 'Transmissão neural recebida! Hype nível 10 ativado no servidor!',
       actionType: 'avatar_3d',
       actionAssetUrl: '',
       voiceId: 'pt-BR-FranciscaNeural',
@@ -114,7 +150,7 @@ export class WebSocketManager {
   }
 
   private broadcastToStreamer(streamerId: string, payload: any) {
-    const clients = this.streamerRooms.get(streamerId);
+    const clients = this.streamerRooms.get(streamerId.toLowerCase());
     if (!clients || clients.size === 0) return;
 
     const json = JSON.stringify(payload);

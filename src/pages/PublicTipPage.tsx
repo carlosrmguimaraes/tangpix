@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { PixModal } from '../components/PixModal';
-import { Sparkles, Bot, Film, Volume2, Music, CheckCircle2, ShieldCheck, Heart } from 'lucide-react';
+import { Sparkles, Bot, Film, Volume2, Music, CheckCircle2, ShieldCheck, Heart, Radio, Lock } from 'lucide-react';
 
 interface PublicTipPageProps {
   username: string;
@@ -90,11 +90,38 @@ export const PublicTipPage: React.FC<PublicTipPageProps> = ({ username }) => {
     );
   }
 
+  const isOnline = streamer?.isOnline;
+  const pixPass = streamer?.pixPass;
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-slate-950 via-slate-900 to-slate-950 py-10 px-4">
       <div className="max-w-2xl mx-auto space-y-6">
+        {/* Top Header com Login do Streamer */}
+        <div className="flex justify-between items-center text-xs">
+          <div className="flex items-center gap-2">
+            <span className="font-extrabold text-white tracking-wider text-sm">
+              Tang<span className="text-pix-cyan">Pix</span>
+            </span>
+          </div>
+
+          <a
+            href="/login"
+            className="px-3 py-1.5 rounded-lg bg-slate-900 hover:bg-slate-800 text-slate-300 border border-slate-800 flex items-center gap-1.5 transition text-xs font-semibold"
+          >
+            <Lock className="w-3.5 h-3.5 text-pix-cyan" /> Área do Streamer (Login)
+          </a>
+        </div>
+
         {/* Header do Streamer */}
         <div className="p-6 rounded-2xl glass-panel-glow text-center relative overflow-hidden">
+          {/* Status do OBS Badge */}
+          <div className="inline-flex items-center gap-1.5 px-3 py-1 mb-4 rounded-full text-[11px] font-bold border shadow-md bg-slate-900">
+            <span className={`w-2 h-2 rounded-full ${isOnline ? 'bg-brand-500 animate-pulse' : 'bg-red-500'}`} />
+            <span className={isOnline ? 'text-brand-400' : 'text-slate-400'}>
+              {isOnline ? '🟢 OBS AO VIVO (ALERTA IMEDIATO)' : '🔴 OBS OFFLINE (ALERTA EM FILA)'}
+            </span>
+          </div>
+
           <div className="w-20 h-20 mx-auto rounded-full p-1 bg-gradient-to-tr from-pix-cyan to-brand-500 shadow-xl mb-3">
             <img
               src={streamer?.avatarUrl}
@@ -102,20 +129,36 @@ export const PublicTipPage: React.FC<PublicTipPageProps> = ({ username }) => {
               className="w-full h-full object-cover rounded-full bg-slate-800"
             />
           </div>
+
           <div className="flex items-center justify-center gap-1.5">
             <h1 className="text-2xl font-black text-white">{streamer?.displayName}</h1>
             <CheckCircle2 className="w-5 h-5 text-pix-cyan" />
           </div>
           <p className="text-sm text-slate-300 mt-1 max-w-md mx-auto">{streamer?.bio}</p>
 
-          <div className="flex items-center justify-center gap-4 mt-4 text-xs text-slate-400">
-            <span className="flex items-center gap-1">
-              <ShieldCheck className="w-4 h-4 text-brand-400" /> Pix Instantâneo
-            </span>
-            <span className="flex items-center gap-1">
-              <Sparkles className="w-4 h-4 text-neon-pink" /> Alertas Tangia 3D
-            </span>
-          </div>
+          {/* PixPass Meta da Comunidade */}
+          {pixPass && (
+            <div className="mt-5 p-3.5 rounded-xl bg-slate-900/90 border border-slate-800 text-left space-y-1.5">
+              <div className="flex justify-between items-center text-xs">
+                <span className="font-bold text-white flex items-center gap-1.5">
+                  <span className="text-sm">{pixPass.currentTier.badge}</span>
+                  PixPass da Comunidade (Nível {pixPass.currentLevel} - {pixPass.currentTier.title})
+                </span>
+                <span className="text-pix-cyan font-mono text-[11px] font-bold">
+                  {pixPass.progressPercentage}%
+                </span>
+              </div>
+              <div className="w-full h-2 bg-slate-950 rounded-full overflow-hidden border border-slate-800">
+                <div
+                  className="h-full bg-gradient-to-r from-pix-cyan to-brand-500 rounded-full"
+                  style={{ width: `${pixPass.progressPercentage}%` }}
+                />
+              </div>
+              <p className="text-[10px] text-slate-400 text-center">
+                Mande um Pix para ajudar a bater a meta de REP do canal e desbloquear novos avatares!
+              </p>
+            </div>
+          )}
         </div>
 
         {/* Formulário Principal de Interatividade */}
@@ -184,7 +227,7 @@ export const PublicTipPage: React.FC<PublicTipPageProps> = ({ username }) => {
             </div>
           </div>
 
-          {/* Subcatálogo: Memes ou 3D */}
+          {/* Subcatálogo: Memes */}
           {actionType === 'meme_webm' && (
             <div className="p-4 rounded-xl bg-slate-900/80 border border-slate-800 space-y-2">
               <label className="text-xs font-bold text-slate-300">Escolha o Meme de Vídeo:</label>
@@ -303,6 +346,16 @@ export const PublicTipPage: React.FC<PublicTipPageProps> = ({ username }) => {
                 className="w-full px-4 py-2.5 bg-slate-900 border border-slate-700 rounded-xl text-sm text-white focus:outline-none focus:border-pix-cyan resize-none"
               />
             </div>
+
+            {/* Aviso Ask AI */}
+            {streamer?.settings?.askAiEnabled && (
+              <div className="p-3 rounded-xl bg-neon-purple/10 border border-neon-purple/30 flex items-center gap-2.5 text-xs text-neon-purple">
+                <Sparkles className="w-4 h-4 shrink-0" />
+                <span>
+                  <strong>Ask AI Ativo:</strong> A inteligência artificial do canal vai criar uma resposta divertida para você ao vivo!
+                </span>
+              </div>
+            )}
           </div>
 
           {/* Botão de Envio */}

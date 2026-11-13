@@ -7,6 +7,8 @@ import { ENV } from './config/env';
 import { PixService } from './modules/pix/PixService';
 import { TtsService } from './modules/tts/TtsService';
 import { WebSocketManager } from './modules/realtime/WebSocketManager';
+import { AuthService } from './modules/auth/AuthService';
+import { AskAiService } from './modules/ai/AskAiService';
 import { createApiRouter } from './routes/api';
 
 async function bootstrap() {
@@ -31,12 +33,17 @@ async function bootstrap() {
   const pixService = new PixService();
   const ttsService = new TtsService();
   const wsManager = new WebSocketManager(server);
+  const authService = new AuthService();
+  const askAiService = new AskAiService();
 
-  // Registra streamer de demonstração padrão
-  wsManager.registerStreamerToken('token_carlos_sec2026', 'carlos');
+  // Registra streamer de demonstração padrão no WebSocket
+  const carlosUser = authService.getUserById('carlos');
+  if (carlosUser) {
+    wsManager.registerStreamerToken(carlosUser.overlayToken, carlosUser.id);
+  }
 
   // Rotas da API REST
-  app.use('/api', createApiRouter(pixService, ttsService, wsManager));
+  app.use('/api', createApiRouter(pixService, ttsService, wsManager, authService, askAiService));
 
   // Healthcheck para Docker e EasyPanel
   app.get('/health', (req, res) => {
@@ -52,7 +59,6 @@ async function bootstrap() {
     const indexPath = path.join(clientDistPath, 'index.html');
     res.sendFile(indexPath, (err) => {
       if (err) {
-        // Se ainda não foi feito o build do vite, serve página informativa
         res.send(`
           <html>
             <head><title>TangPix Server</title></head>
@@ -73,6 +79,7 @@ async function bootstrap() {
     console.log(`📡 WebSocket ativo em ws://0.0.0.0:${ENV.PORT}/ws`);
     console.log(`💎 Provedor Pix Ativo: ${ENV.PIX_PROVIDER}`);
     console.log(`🎙️  Provedor TTS Ativo: ${ENV.DEFAULT_TTS_PROVIDER}`);
+    console.log(`🤖 Ask AI Personas & PixPass Ativos!`);
     console.log(`=======================================================`);
   });
 }

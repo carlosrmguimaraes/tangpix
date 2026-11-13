@@ -166,6 +166,14 @@ export const OverlayWidget: React.FC<{ token: string }> = ({ token }) => {
               </p>
             )}
 
+            {/* Resposta do Ask AI se existir */}
+            {currentAlert.aiResponse && (
+              <div className="mt-2.5 p-2.5 rounded-xl bg-neon-purple/20 border border-neon-purple/40 text-xs text-neon-purple font-bold flex items-center justify-center gap-1.5">
+                <Sparkles className="w-3.5 h-3.5 text-neon-pink shrink-0" />
+                <span>IA: "{currentAlert.aiResponse}"</span>
+              </div>
+            )}
+
             {/* Rodapé Informativo */}
             <div className="flex items-center justify-center gap-2 mt-3 text-xs text-pix-cyan font-mono font-medium">
               <Volume2 className="w-3.5 h-3.5 animate-pulse" /> Voz de IA em tempo real via Pix
